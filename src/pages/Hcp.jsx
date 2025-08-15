@@ -39,6 +39,8 @@ export default function Hcp() {
   const [util, setUtil] = useState(null)
   const [notes, setNotes] = useState(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [selectedNote, setSelectedNote] = useState(null)
+  const [showAddNote, setShowAddNote] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -477,6 +479,17 @@ export default function Hcp() {
                 <div className='text-sm text-slate-500'>Loading…</div>
               ) : (
                 <>
+                  {/* Trip Notes Header */}
+                  <div className='flex items-center justify-between'>
+                    <h3 className='text-lg font-semibold text-slate-900'>Trip Notes & Visit History</h3>
+                    <button 
+                      onClick={() => setShowAddNote(true)}
+                      className='px-4 py-2 rounded-lg bg-brand-primary text-white text-sm hover:bg-brand-primary/90 transition-colors'
+                    >
+                      + Add New Note
+                    </button>
+                  </div>
+
                   {/* Trip Notes Analytics */}
                   <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
                     <div className='bg-slate-50 rounded-xl p-4'>
@@ -504,21 +517,77 @@ export default function Hcp() {
                     <div className='md:col-span-2 space-y-3'>
                       <h4 className='text-lg font-semibold text-slate-900 mb-4'>Visit History</h4>
                       {notes.map((n, i) => (
-                        <div key={i} className='border rounded-xl p-4 bg-white hover:shadow-md transition-shadow'>
+                        <div 
+                          key={i} 
+                          className={`border rounded-xl p-4 bg-white hover:shadow-md transition-shadow cursor-pointer ${
+                            selectedNote === i ? 'ring-2 ring-brand-primary bg-brand-light' : ''
+                          }`}
+                          onClick={() => setSelectedNote(selectedNote === i ? null : i)}
+                        >
                           <div className='flex items-start justify-between mb-2'>
                             <div className='text-sm font-medium text-slate-900'>{n.date}</div>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              n.sentiment === 'Positive' ? 'bg-green-100 text-green-800' :
-                              n.sentiment === 'Negative' ? 'bg-red-100 text-red-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {n.sentiment}
-                            </span>
+                            <div className='flex items-center gap-2'>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                n.sentiment === 'Positive' ? 'bg-green-100 text-green-800' :
+                                n.sentiment === 'Negative' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {n.sentiment}
+                              </span>
+                              {selectedNote === i && (
+                                <svg className='w-4 h-4 text-brand-primary' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
+                                </svg>
+                              )}
+                            </div>
                           </div>
                           <div className='text-sm text-slate-700 mb-2'>{n.summary}</div>
                           <div className='text-xs text-slate-600'>
                             <span className='font-medium'>Follow-up:</span> {n.followUp}
                           </div>
+                          
+                          {/* Expanded Details */}
+                          {selectedNote === i && (
+                            <div className='mt-4 pt-4 border-t border-slate-200 space-y-3'>
+                              <div>
+                                <h5 className='text-sm font-semibold text-slate-900 mb-2'>Detailed Notes</h5>
+                                <div className='text-sm text-slate-700 bg-slate-50 rounded-lg p-3'>
+                                  {n.detailedNotes || 'Discussed product utilization trends and upcoming needs. Physician showed interest in new CAUTI prevention protocols and requested additional training materials for staff.'}
+                                </div>
+                              </div>
+                              
+                              <div className='grid grid-cols-2 gap-4'>
+                                <div>
+                                  <span className='text-xs font-medium text-slate-600'>Visit Duration:</span>
+                                  <div className='text-sm text-slate-900'>45 minutes</div>
+                                </div>
+                                <div>
+                                  <span className='text-xs font-medium text-slate-600'>Attendees:</span>
+                                  <div className='text-sm text-slate-900'>Dr. {doc.name}, Nurse Manager</div>
+                                </div>
+                                <div>
+                                  <span className='text-xs font-medium text-slate-600'>Topics Discussed:</span>
+                                  <div className='text-sm text-slate-900'>CAUTI Prevention, Product Training</div>
+                                </div>
+                                <div>
+                                  <span className='text-xs font-medium text-slate-600'>Next Steps:</span>
+                                  <div className='text-sm text-slate-900'>Schedule follow-up in 2 weeks</div>
+                                </div>
+                              </div>
+                              
+                              <div className='flex gap-2'>
+                                <button className='px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs hover:bg-slate-200 transition-colors'>
+                                  Edit Note
+                                </button>
+                                <button className='px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs hover:bg-slate-200 transition-colors'>
+                                  Export PDF
+                                </button>
+                                <button className='px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs hover:bg-slate-200 transition-colors'>
+                                  Share
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -578,6 +647,135 @@ export default function Hcp() {
           )}
         </div>
       </div>
+
+      {/* Add New Trip Note Modal */}
+      {showAddNote && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
+          <div className='bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
+            <div className='p-6'>
+              <div className='flex items-center justify-between mb-4'>
+                <h2 className='text-xl font-bold text-slate-900'>Add New Trip Note</h2>
+                <button 
+                  onClick={() => setShowAddNote(false)}
+                  className='text-slate-400 hover:text-slate-600 text-2xl'
+                >
+                  ×
+                </button>
+              </div>
+              
+              <form className='space-y-4'>
+                <div>
+                  <label className='block text-sm font-medium text-slate-700 mb-2'>Visit Date</label>
+                  <input 
+                    type='date' 
+                    className='w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary'
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                
+                <div>
+                  <label className='block text-sm font-medium text-slate-700 mb-2'>Visit Summary</label>
+                  <textarea 
+                    rows={3}
+                    className='w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary'
+                    placeholder='Brief summary of the visit...'
+                  />
+                </div>
+                
+                <div>
+                  <label className='block text-sm font-medium text-slate-700 mb-2'>Detailed Notes</label>
+                  <textarea 
+                    rows={5}
+                    className='w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary'
+                    placeholder='Detailed notes about the visit, discussions, and outcomes...'
+                  />
+                </div>
+                
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-slate-700 mb-2'>Sentiment</label>
+                    <select className='w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary'>
+                      <option value='Positive'>Positive</option>
+                      <option value='Neutral'>Neutral</option>
+                      <option value='Negative'>Negative</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className='block text-sm font-medium text-slate-700 mb-2'>Follow-up Required</label>
+                    <select className='w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary'>
+                      <option value='None'>None</option>
+                      <option value='Schedule follow-up call'>Schedule follow-up call</option>
+                      <option value='Send product samples'>Send product samples</option>
+                      <option value='Provide training materials'>Provide training materials</option>
+                      <option value='Arrange clinical consultation'>Arrange clinical consultation</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-slate-700 mb-2'>Visit Duration</label>
+                    <input 
+                      type='text' 
+                      className='w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary'
+                      placeholder='e.g., 45 minutes'
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className='block text-sm font-medium text-slate-700 mb-2'>Attendees</label>
+                    <input 
+                      type='text' 
+                      className='w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary'
+                      placeholder='e.g., Dr. Smith, Nurse Manager'
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className='block text-sm font-medium text-slate-700 mb-2'>Topics Discussed</label>
+                  <div className='space-y-2'>
+                    {['CAUTI Prevention', 'Product Training', 'Clinical Support', 'Pricing Discussion', 'Quality Metrics'].map((topic) => (
+                      <label key={topic} className='flex items-center'>
+                        <input type='checkbox' className='rounded border-slate-300 text-brand-primary focus:ring-brand-primary' />
+                        <span className='ml-2 text-sm text-slate-700'>{topic}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className='block text-sm font-medium text-slate-700 mb-2'>Next Steps</label>
+                  <textarea 
+                    rows={2}
+                    className='w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary'
+                    placeholder='Specific next steps and action items...'
+                  />
+                </div>
+              </form>
+              
+              <div className='mt-6 flex justify-end gap-3'>
+                <button 
+                  onClick={() => setShowAddNote(false)}
+                  className='px-4 py-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors'
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    // Here you would save the new trip note
+                    setShowAddNote(false)
+                  }}
+                  className='px-4 py-2 rounded-lg bg-brand-primary text-white hover:bg-brand-primary/90 transition-colors'
+                >
+                  Save Trip Note
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

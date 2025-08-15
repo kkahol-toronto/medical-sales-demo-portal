@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-export default function Login() {
+export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('rep@hollister.com')
   const [password, setPassword] = useState('demo123')
   const [role, setRole] = useState('sales_rep')
@@ -10,12 +10,19 @@ export default function Login() {
 
   const onSubmit = (e) => {
     e.preventDefault()
-    localStorage.setItem('uro360_auth', JSON.stringify({
+    const userData = {
       email,
       role,
       ts: Date.now()
-    }))
-    nav('/')
+    }
+    localStorage.setItem('uro360_auth', JSON.stringify(userData))
+    
+    // Call the onLoginSuccess callback if provided
+    if (onLoginSuccess) {
+      onLoginSuccess(userData)
+    }
+    
+    nav('/dashboard')
   }
 
   return (
